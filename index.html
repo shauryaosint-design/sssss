@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SHAURYA OSINT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050810;
+      --cyan: #4ec8e8;
+      --red: #e8203a;
+      --panel: #0a101c;
+      --text: #b8c8d8;
+      --muted: #4a5a70;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "Share Tech Mono", monospace;
+      color: var(--text);
+    }
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, #0d1528 0%, transparent 60%),
+        linear-gradient(180deg, #081018 0%, #050810 40%, #03050a 100%);
+    }
+    .cables { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+    .cable {
+      position: absolute;
+      background: linear-gradient(180deg, #1a2030, #0e1420);
+      border-radius: 3px;
+      box-shadow: inset 0 0 2px #2a3040;
+    }
+    .cable.c1 { width: 6px; height: 28%; top: 0; left: 8%; transform: rotate(8deg); }
+    .cable.c2 { width: 5px; height: 35%; top: 0; left: 18%; transform: rotate(-4deg); }
+    .cable.c3 { width: 7px; height: 22%; top: 0; right: 12%; transform: rotate(-10deg); }
+    .cable.c4 { width: 5px; height: 40%; top: 0; right: 22%; transform: rotate(6deg); }
+    .cable.c5 { width: 4px; height: 18%; top: 0; left: 48%; transform: rotate(2deg); }
+    .cable.c6 { width: 6px; height: 30%; top: 0; right: 35%; transform: rotate(-3deg); }
+    .loop {
+      position: absolute;
+      border: 4px solid #151c2a;
+      border-radius: 50%;
+      border-bottom-color: transparent;
+      border-left-color: transparent;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .loop.l1 { width: 120px; height: 80px; top: 5%; left: 25%; transform: rotate(20deg); }
+    .loop.l2 { width: 90px; height: 60px; top: 2%; right: 28%; transform: rotate(-15deg); }
+
+    .monitor-top {
+      position: absolute;
+      top: 4%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(52vw, 560px);
+      aspect-ratio: 16/10;
+      z-index: 10;
+      background: #0a0e18;
+      border: 3px solid #1a2235;
+      border-radius: 4px;
+      box-shadow: 0 0 0 2px #0d121c, 0 25px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,100,150,0.15);
+      overflow: hidden;
+    }
+    .monitor-top .bezel {
+      position: absolute; inset: 6px; border-radius: 2px; overflow: hidden; background: #0a1525;
+    }
+    .storm {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 40% 30%, #1a3a55 0%, transparent 50%),
+        radial-gradient(ellipse 50% 50% at 70% 20%, #0e2a40 0%, transparent 45%),
+        linear-gradient(180deg, #0a1a30 0%, #0d2035 40%, #152838 100%);
+    }
+    .cloud {
+      position: absolute; border-radius: 50%;
+      background: rgba(30,50,70,0.7); filter: blur(8px);
+      animation: drift 20s ease-in-out infinite;
+    }
+    .cloud.a { width: 180px; height: 80px; top: 15%; left: 10%; }
+    .cloud.b { width: 220px; height: 100px; top: 25%; left: 40%; animation-delay: -5s; }
+    .cloud.c { width: 160px; height: 70px; top: 10%; left: 55%; animation-delay: -10s; }
+    .cloud.d { width: 200px; height: 90px; top: 40%; left: 20%; animation-delay: -7s; filter: blur(12px); }
+    @keyframes drift {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(30px); }
+    }
+    .lightning {
+      position: absolute; inset: 0;
+      animation: flash 7s ease-in-out infinite;
+    }
+    @keyframes flash {
+      0%, 90%, 100% { background: transparent; }
+      92% { background: rgba(150,200,255,0.15); }
+      94% { background: transparent; }
+      96% { background: rgba(150,200,255,0.1); }
+    }
+    .hud-line {
+      position: absolute; height: 1px; background: rgba(0,200,255,0.25);
+      left: 8%; right: 8%;
+    }
+    .hud-line.h1 { top: 20%; }
+    .hud-line.h2 { top: 55%; }
+    .hud-dot {
+      position: absolute; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--red); box-shadow: 0 0 8px var(--red);
+      animation: blink 1.5s infinite;
+    }
+    .hud-dot.d1 { top: 18%; left: 15%; }
+    .hud-dot.d2 { top: 53%; right: 20%; }
+    .hud-dot.d3 { top: 70%; left: 40%; }
+    @keyframes blink {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+    .hud-text {
+      position: absolute; font-size: 9px; color: rgba(0,200,255,0.5); letter-spacing: 0.1em;
+    }
+    .hud-text.t1 { bottom: 12%; left: 10%; }
+    .hud-text.t2 { top: 12%; right: 10%; }
+
+    .rack { position: absolute; bottom: 18%; width: 70px; z-index: 8; }
+    .rack.left { left: 3%; }
+    .rack.right { right: 3%; }
+    .rack-unit {
+      background: linear-gradient(90deg, #121820, #1a2230 40%, #0e141c);
+      border: 1px solid #1e2838; border-radius: 4px; margin-bottom: 8px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    }
+    .rack-unit.speaker {
+      height: 90px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px;
+    }
+    .speaker-cone {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: radial-gradient(circle at 40% 40%, #2a3548, #0a1018);
+      border: 2px solid #1a2435; box-shadow: inset 0 0 8px #000;
+    }
+    .speaker-cone.sm { width: 22px; height: 22px; }
+    .rack-unit.panel-led {
+      height: 40px; display: flex; align-items: center;
+      justify-content: space-evenly; padding: 0 8px;
+    }
+    .led {
+      width: 8px; height: 8px; border-radius: 2px;
+      background: var(--red); box-shadow: 0 0 6px var(--red);
+    }
+    .led.cyan { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+    .led.off { background: #1a2030; box-shadow: none; }
+    .rack-unit.tall {
+      height: 120px;
+      background: repeating-linear-gradient(180deg, #121820 0px, #121820 8px, #0e141c 8px, #0e141c 10px);
+      border: 1px solid #1e2838;
+    }
+
+    .glow-strip {
+      position: absolute; width: 4px; background: var(--red);
+      box-shadow: 0 0 15px var(--red), 0 0 40px rgba(232,32,58,0.4);
+      z-index: 7; border-radius: 2px;
+    }
+    .glow-strip.gs1 { height: 30%; bottom: 25%; left: 1.5%; }
+    .glow-strip.gs2 { height: 20%; bottom: 35%; right: 1.5%; }
+    .glow-strip.gs3 { height: 15%; bottom: 15%; left: 2%; opacity: 0.6; }
+
+    .desk {
+      position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%);
+      width: min(78vw, 780px); height: 14px;
+      background: linear-gradient(180deg, #1a2230, #0e1420);
+      border-radius: 2px; z-index: 15;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    }
+    .desk::after {
+      content: ""; position: absolute; bottom: -6px; left: 5%; right: 5%;
+      height: 6px; background: #0a1018; border-radius: 0 0 4px 4px;
+    }
+
+    .mon-left {
+      position: absolute; bottom: calc(12% + 18px);
+      left: calc(50% - min(36vw, 360px));
+      width: min(34vw, 340px); aspect-ratio: 16/11; z-index: 20;
+      background: #0a0e16; border: 3px solid #1a2235; border-radius: 3px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 20px rgba(232,32,58,0.1);
+      overflow: hidden;
+    }
+    .mon-left .screen {
+      position: absolute; inset: 5px; background: #080c14;
+      border-radius: 1px; overflow: hidden; display: flex; flex-direction: column;
+    }
+    .term-bar {
+      background: linear-gradient(90deg, rgba(232,32,58,0.25), transparent);
+      padding: 5px 10px; font-size: 9px; letter-spacing: 0.12em; color: var(--red);
+      border-bottom: 1px solid #1a2235; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .term-bar .dots span {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 3px;
+    }
+    .term-bar .dots .r { background: #ff5f56; }
+    .term-bar .dots .y { background: #ffbd2e; }
+    .term-bar .dots .g { background: #27c93f; }
+    .term-body {
+      flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden;
+    }
+    .term-label {
+      font-size: 9px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase;
+    }
+    .term-input {
+      width: 100%; background: #050810; border: 1px solid #1e2a40; color: var(--cyan);
+      font-family: inherit; font-size: 16px; letter-spacing: 0.25em; padding: 8px 10px;
+      outline: none; border-radius: 2px;
+    }
+    .term-input:focus {
+      border-color: var(--cyan); box-shadow: 0 0 10px rgba(78,200,232,0.2);
+    }
+    .term-input::placeholder { color: #1e2a40; letter-spacing: 0.1em; }
+    .term-btn {
+      background: linear-gradient(135deg, var(--red), #a01028); border: none; color: #fff;
+      font-family: "Orbitron", sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.2em; padding: 9px 0; cursor: pointer; border-radius: 2px;
+      box-shadow: 0 0 15px rgba(232,32,58,0.4); text-transform: uppercase;
+    }
+    .term-btn:hover { box-shadow: 0 0 25px rgba(232,32,58,0.7); }
+    .term-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .term-status { font-size: 10px; color: var(--muted); min-height: 14px; }
+    .term-status.ok { color: #00ff9d; }
+    .term-status.err { color: var(--red); }
+    .term-status.load { color: var(--cyan); }
+
+    .mon-right {
+      position: absolute; bottom: calc(12% + 18px);
+      right: calc(50% - min(36vw, 360px));
+      width: min(34vw, 340px); aspect-ratio: 16/11; z-index: 20;
+      background: #0a0e16; border: 3px solid #1a2235; border-radius: 3px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 20px rgba(78,200,232,0.08);
+      overflow: hidden;
+    }
+    .mon-right .screen {
+      position: absolute; inset: 5px; background: #080c14;
+      border-radius: 1px; overflow: hidden; display: flex; flex-direction: column;
+    }
+    .res-bar {
+      background: linear-gradient(90deg, rgba(78,200,232,0.15), transparent);
+      padding: 5px 10px; font-size: 9px; letter-spacing: 0.12em; color: var(--cyan);
+      border-bottom: 1px solid #1a2235; flex-shrink: 0;
+    }
+    .res-body {
+      flex: 1; overflow-y: auto; padding: 10px 12px; font-size: 11px; line-height: 1.5;
+    }
+    .res-body::-webkit-scrollbar { width: 4px; }
+    .res-body::-webkit-scrollbar-thumb { background: #1e2a40; border-radius: 2px; }
+    .res-placeholder {
+      color: var(--muted); text-align: center; margin-top: 30%; font-size: 10px; letter-spacing: 0.1em;
+    }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .meta-chip {
+      background: #0c1420; border: 1px solid #1a2740; padding: 3px 8px; border-radius: 2px; font-size: 10px;
+    }
+    .meta-chip .k { color: var(--muted); margin-right: 4px; }
+    .meta-chip .v { color: var(--cyan); }
+    .meta-chip .v.ok { color: #00ff9d; }
+    .meta-chip .v.fail { color: var(--red); }
+    .rec {
+      background: #0a1018; border-left: 2px solid var(--red);
+      padding: 8px 10px; margin-bottom: 8px; border-radius: 0 2px 2px 0;
+    }
+    .rec.alt { border-left-color: var(--cyan); }
+    .rec-title {
+      font-size: 9px; letter-spacing: 0.12em; color: var(--red);
+      margin-bottom: 6px; text-transform: uppercase;
+    }
+    .rec.alt .rec-title { color: var(--cyan); }
+    .fld {
+      display: grid; grid-template-columns: 72px 1fr; gap: 2px;
+      font-size: 10px; padding: 2px 0; border-bottom: 1px solid rgba(26,39,64,0.5);
+    }
+    .fld:last-child { border: none; }
+    .fld .k { color: var(--muted); }
+    .fld .v { color: var(--text); word-break: break-all; }
+
+    .chair-person {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: min(28vw, 280px); height: 42%; z-index: 25; pointer-events: none;
+    }
+    .chair-base {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 90px; height: 14px;
+    }
+    .chair-leg {
+      position: absolute; bottom: 0; width: 50px; height: 4px;
+      background: #1a2030; border-radius: 2px; transform-origin: center;
+    }
+    .chair-leg.l1 { left: 20px; transform: rotate(-25deg); }
+    .chair-leg.l2 { right: 20px; transform: rotate(25deg); }
+    .chair-leg.l3 { left: 5px; transform: rotate(-55deg); width: 40px; }
+    .chair-leg.l4 { right: 5px; transform: rotate(55deg); width: 40px; }
+    .chair-leg.l5 { left: 50%; transform: translateX(-50%); width: 35px; }
+    .chair-stem {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      width: 10px; height: 50px;
+      background: linear-gradient(180deg, #2a1020, #1a2030); border-radius: 2px;
+    }
+    .chair-stem::after {
+      content: ""; position: absolute; left: -2px; right: -2px; top: 20%; height: 4px;
+      background: var(--red); box-shadow: 0 0 8px var(--red); border-radius: 1px;
+    }
+    .chair-seat {
+      position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
+      width: 100px; height: 28px;
+      background: linear-gradient(180deg, #151c28, #0c1018);
+      border-radius: 8px 8px 4px 4px; border: 1px solid #1a2230;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .chair-seat::before {
+      content: ""; position: absolute; bottom: 4px; left: 10%; right: 10%; height: 3px;
+      background: var(--red); box-shadow: 0 0 6px var(--red); border-radius: 1px; opacity: 0.8;
+    }
+    .chair-back {
+      position: absolute; bottom: 82px; left: 50%; transform: translateX(-50%);
+      width: 95px; height: 110px;
+      background: linear-gradient(180deg, #121820 0%, #0a1018 100%);
+      border-radius: 12px 12px 4px 4px; border: 1px solid #1a2230;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+    .chair-back::after {
+      content: ""; position: absolute; left: 8px; right: 8px; top: 15%; height: 2px;
+      background: var(--red); box-shadow: 0 0 6px var(--red); opacity: 0.7;
+    }
+    .chair-back::before {
+      content: ""; position: absolute; left: 8px; right: 8px; top: 45%; height: 2px;
+      background: var(--red); box-shadow: 0 0 6px var(--red); opacity: 0.5;
+    }
+    .person {
+      position: absolute; bottom: 95px; left: 50%; transform: translateX(-50%);
+      width: 80px; height: 140px; z-index: 26;
+    }
+    .person-torso {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 55px; height: 70px;
+      background: linear-gradient(180deg, #1a2230, #0e1420);
+      border-radius: 20px 20px 8px 8px;
+    }
+    .person-hood {
+      position: absolute; bottom: 55px; left: 50%; transform: translateX(-50%);
+      width: 48px; height: 42px; background: #151c28;
+      border-radius: 50% 50% 40% 40%; box-shadow: inset 0 -8px 0 #0a1018;
+    }
+    .person-head {
+      position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%);
+      width: 28px; height: 32px; background: #1a2030; border-radius: 50%;
+    }
+    .headphones {
+      position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%);
+      width: 42px; height: 18px; border: 3px solid #2a3548;
+      border-bottom: none; border-radius: 20px 20px 0 0;
+    }
+    .headphones::before, .headphones::after {
+      content: ""; position: absolute; bottom: -6px; width: 10px; height: 14px;
+      background: #2a3548; border-radius: 3px;
+    }
+    .headphones::before { left: -4px; }
+    .headphones::after { right: -4px; }
+    .headphone-red {
+      position: absolute; bottom: 90px; width: 8px; height: 8px;
+      background: var(--red); border-radius: 2px; box-shadow: 0 0 6px var(--red);
+    }
+    .headphone-red.hl { left: calc(50% - 24px); }
+    .headphone-red.hr { right: calc(50% - 24px); left: auto; }
+    .person-arm {
+      position: absolute; bottom: 20px; width: 14px; height: 45px;
+      background: #151c28; border-radius: 6px;
+    }
+    .person-arm.la { left: 2px; transform: rotate(15deg); }
+    .person-arm.ra { right: 2px; transform: rotate(-15deg); }
+
+    .keyboard {
+      position: absolute; bottom: calc(12% + 2px); left: 50%; transform: translateX(-50%);
+      width: 140px; height: 10px; background: #121820; border-radius: 2px; z-index: 16;
+      border: 1px solid #1a2230; box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    }
+    .keyboard::after {
+      content: ""; position: absolute; inset: 2px 6px;
+      background: repeating-linear-gradient(90deg, #1a2230 0px, #1a2230 3px, transparent 3px, transparent 6px);
+      opacity: 0.5;
+    }
+    .floor-glow {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 15%;
+      background: radial-gradient(ellipse 60% 100% at 50% 100%, rgba(232,32,58,0.08), transparent);
+      z-index: 1; pointer-events: none;
+    }
+    .wm {
+      position: absolute; top: 2%; left: 50%; transform: translateX(-50%);
+      font-family: "Orbitron", sans-serif; font-size: 10px; letter-spacing: 0.4em;
+      color: rgba(78,200,232,0.25); z-index: 30; pointer-events: none;
+    }
+
+    @media (max-width: 700px) {
+      .rack, .chair-person, .cables, .loop, .glow-strip, .keyboard, .monitor-top { display: none; }
+      .desk { display: none; }
+      .mon-left, .mon-right {
+        position: relative; left: auto; right: auto; bottom: auto;
+        width: 92%; margin: 12px auto; aspect-ratio: auto; min-height: 220px; transform: none;
+      }
+      .scene {
+        overflow-y: auto; display: flex; flex-direction: column;
+        align-items: center; padding: 20px 0 40px;
+      }
+      .wm { position: relative; top: auto; margin-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="wm">SHAURYA OSINT</div>
+    <div class="cables">
+      <div class="cable c1"></div><div class="cable c2"></div><div class="cable c3"></div>
+      <div class="cable c4"></div><div class="cable c5"></div><div class="cable c6"></div>
+    </div>
+    <div class="loop l1"></div><div class="loop l2"></div>
+    <div class="glow-strip gs1"></div><div class="glow-strip gs2"></div><div class="glow-strip gs3"></div>
+
+    <div class="monitor-top">
+      <div class="bezel">
+        <div class="storm">
+          <div class="cloud a"></div><div class="cloud b"></div>
+          <div class="cloud c"></div><div class="cloud d"></div>
+          <div class="lightning"></div>
+          <div class="hud-line h1"></div><div class="hud-line h2"></div>
+          <div class="hud-dot d1"></div><div class="hud-dot d2"></div><div class="hud-dot d3"></div>
+          <div class="hud-text t1">SAT-LINK // ACTIVE</div>
+          <div class="hud-text t2">NODE-07</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rack left">
+      <div class="rack-unit speaker"><div class="speaker-cone"></div><div class="speaker-cone sm"></div></div>
+      <div class="rack-unit panel-led"><div class="led"></div><div class="led cyan"></div><div class="led"></div><div class="led off"></div></div>
+      <div class="rack-unit tall"></div>
+    </div>
+    <div class="rack right">
+      <div class="rack-unit speaker"><div class="speaker-cone"></div><div class="speaker-cone sm"></div></div>
+      <div class="rack-unit panel-led"><div class="led cyan"></div><div class="led"></div><div class="led off"></div><div class="led"></div></div>
+      <div class="rack-unit tall"></div>
+    </div>
+
+    <div class="mon-left">
+      <div class="screen">
+        <div class="term-bar">
+          <span class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></span>
+          QUERY_INTERFACE.exe
+        </div>
+        <div class="term-body">
+          <div class="term-label">Target Mobile Number</div>
+          <input class="term-input" id="num" type="text" maxlength="10" placeholder="9876543210" inputmode="numeric" autocomplete="off" />
+          <button class="term-btn" id="go">SCAN</button>
+          <div class="term-status" id="status"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mon-right">
+      <div class="screen">
+        <div class="res-bar">INTEL_FEED.sys</div>
+        <div class="res-body" id="results">
+          <div class="res-placeholder">AWAITING QUERY…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="desk"></div>
+    <div class="keyboard"></div>
+
+    <div class="chair-person">
+      <div class="chair-base">
+        <div class="chair-leg l1"></div><div class="chair-leg l2"></div>
+        <div class="chair-leg l3"></div><div class="chair-leg l4"></div><div class="chair-leg l5"></div>
+      </div>
+      <div class="chair-stem"></div>
+      <div class="chair-seat"></div>
+      <div class="chair-back"></div>
+      <div class="person">
+        <div class="person-arm la"></div><div class="person-arm ra"></div>
+        <div class="person-torso"></div>
+        <div class="person-hood"></div>
+        <div class="person-head"></div>
+        <div class="headphones"></div>
+        <div class="headphone-red hl"></div>
+        <div class="headphone-red hr"></div>
+      </div>
+    </div>
+    <div class="floor-glow"></div>
+  </div>
+
+  <script>
+    const numInput = document.getElementById("num");
+    const goBtn = document.getElementById("go");
+    const statusEl = document.getElementById("status");
+    const resultsEl = document.getElementById("results");
+
+    numInput.addEventListener("input", () => {
+      numInput.value = numInput.value.replace(/\D/g, "").slice(0, 10);
+    });
+    numInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") goBtn.click();
+    });
+    goBtn.addEventListener("click", lookup);
+
+    async function lookup() {
+      const num = numInput.value.replace(/\D/g, "");
+      if (num.length !== 10) {
+        statusEl.textContent = "✗ need 10 digits";
+        statusEl.className = "term-status err";
+        return;
+      }
+      goBtn.disabled = true;
+      statusEl.textContent = "▸ querying databases…";
+      statusEl.className = "term-status load";
+      resultsEl.innerHTML = '<div class="res-placeholder">SCANNING…</div>';
+      try {
+        const res = await fetch("/api/lookup?n=" + num);
+        const data = await res.json();
+        if (!res.ok || data.status === "error") {
+          statusEl.textContent = "✗ " + (data.message || "failed");
+          statusEl.className = "term-status err";
+          resultsEl.innerHTML = '<div class="res-placeholder">NO DATA</div>';
+          return;
+        }
+        statusEl.textContent = "✓ data received";
+        statusEl.className = "term-status ok";
+        render(data, num);
+      } catch (e) {
+        statusEl.textContent = "✗ network error";
+        statusEl.className = "term-status err";
+        resultsEl.innerHTML = '<div class="res-placeholder">CONNECTION LOST</div>';
+      } finally {
+        goBtn.disabled = false;
+      }
+    }
+
+    function val(v) {
+      if (v == null || v === "" || v === "null") return "—";
+      return String(v);
+    }
+    function parseAddr(s) {
+      if (!s) return "—";
+      return s.replace(/!!!/g, ", ").replace(/\s+/g, " ").replace(/^,|,$/g, "").trim() || "—";
+    }
+    function toArr(x) {
+      if (!x) return [];
+      return Array.isArray(x) ? x : [x];
+    }
+
+    function render(data, num) {
+      const status = (data.status || "").toLowerCase();
+      const ok = status === "success";
+      const section = data.Data || {};
+      let html = '<div class="meta-row">' +
+        '<div class="meta-chip"><span class="k">Q</span><span class="v">' + num + '</span></div>' +
+        '<div class="meta-chip"><span class="k">ST</span><span class="v ' + (ok ? "ok" : "fail") + '">' + (data.status || "—").toUpperCase() + '</span></div>' +
+        '<div class="meta-chip"><span class="k">MAIN</span><span class="v">' + (data.Total_Main_Results ?? 0) + '</span></div>' +
+        '<div class="meta-chip"><span class="k">ALT</span><span class="v">' + (data.Total_Alt_Results ?? 0) + '</span></div>' +
+        '</div>';
+
+      const mains = toArr(section.Main || section.main);
+      const alts = toArr(section.Alt || section.alt || section.Alternate);
+      mains.forEach(function(r, i) { html += card(r, "MAIN #" + (i + 1), false); });
+      alts.forEach(function(r, i) { html += card(r, "ALT #" + (i + 1), true); });
+
+      if (!mains.length && !alts.length) {
+        const keys = Object.keys(section);
+        if (keys.length) {
+          keys.forEach(function(k) {
+            const item = section[k];
+            if (item && typeof item === "object" && !Array.isArray(item)) html += card(item, k, false);
+            else if (Array.isArray(item)) item.forEach(function(r, i) {
+              if (r && typeof r === "object") html += card(r, k + " #" + (i + 1), false);
+            });
+          });
+        } else {
+          html += '<div class="res-placeholder">NO RECORDS FOUND</div>';
+        }
+      }
+      resultsEl.innerHTML = html;
+    }
+
+    function card(r, title, isAlt) {
+      const fields = [
+        ["Name", r.Name || r.name || r.FullName],
+        ["Father", r.Father || r.father || r.FatherName],
+        ["Mobile", r.Mobile || r.mobile || r.Phone || r.Number],
+        ["Alt", r.AltMobile || r.alt_mobile || r.AlternateMobile],
+        ["Addr", parseAddr(r.Address || r.address || r.FullAddress)],
+        ["Circle", r.Circle || r.circle || r.Operator],
+        ["ID", r.ID || r.id || r.Id]
+      ];
+      let body = fields
+        .filter(function(f) { return f[1] != null && f[1] !== "" && f[1] !== "null"; })
+        .map(function(f) {
+          return '<div class="fld"><span class="k">' + f[0] + '</span><span class="v">' + val(f[1]) + '</span></div>';
+        }).join("");
+      if (!body) {
+        body = Object.entries(r).map(function(e) {
+          return '<div class="fld"><span class="k">' + e[0] + '</span><span class="v">' +
+            val(typeof e[1] === "object" ? JSON.stringify(e[1]) : e[1]) + '</span></div>';
+        }).join("");
+      }
+      return '<div class="rec ' + (isAlt ? "alt" : "") + '"><div class="rec-title">' + title +
+        '</div>' + (body || "—") + '</div>';
+    }
+  </script>
+</body>
+</html>
